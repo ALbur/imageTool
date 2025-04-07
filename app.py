@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
-# 获取速率限制参数，默认为每分钟5次请求
+# 获取速率限制参数,默认为每分钟5次请求
 RATE_LIMIT = os.environ.get('RATE_LIMIT', '5')
 
 # 设置速率限制器
@@ -41,19 +41,27 @@ def generate_image(secret):
     data = request.json
     api_key = data.get('apiKey', '')
     prompt = data.get('prompt', '')
-    model = data.get('model', 'grok-2-image-latest')
+    model = data.get('model', 'grok-2-image')  # 按照文档更新默认模型名称
     base_url = data.get('baseURL', API_BASE_URL)
-    return_format = data.get('returnFormat', 'url')
+    response_format = data.get('response_format', 'url')  # 使用文档中的参数名称
+    n = data.get('n', 1)  # 添加生成图片数量参数,默认为1
 
     if not api_key or not prompt:
         logging.error("Missing apiKey or prompt in the request")
         return jsonify({"error": "Missing apiKey or prompt"}), 400
+    
+    # 限制n的范围为1-10
+    if n < 1 or n > 10:
+        logging.error("n must be between 1 and 10")
+        return jsonify({"error": "n must be between 1 and 10"}), 400
 
     logging.info("使用提示词: %s", prompt)
 
     request_data = {
         "model": model,
-        "prompt": prompt
+        "prompt": prompt,
+        "n": n,
+        "response_format": response_format  # 添加响应格式参数
     }
 
     try:
@@ -78,23 +86,24 @@ def generate_image(secret):
 
         if "data" in result and len(result["data"]) > 0:
             images = []
+            revised_prompts = []
+            
             for image_data in result["data"]:
-                if "url" in image_data:
-                    url = image_data["url"]
-                    if return_format == "url":
-                        images.append(url)
-                    elif return_format == "base64":
-                        try:
-                            img_response = requests.get(url)
-                            img_response.raise_for_status()
-                            image_base64 = base64.b64encode(img_response.content).decode('utf-8')
-                            images.append(image_base64)
-                        except requests.exceptions.RequestException as e:
-                            logging.error("下载图片时出错: %s", e)
-                            return jsonify({"error": "Error downloading image"}), 500
+                # 根据response_format处理不同的返回格式
+                if response_format == "url" and "url" in image_data:
+                    images.append(image_data["url"])
+                elif response_format == "b64_json" and "b64_json" in image_data:
+                    images.append(image_data["b64_json"])
+                
+                # 添加修订后的提示词
+                if "revised_prompt" in image_data:
+                    revised_prompts.append(image_data["revised_prompt"])
 
-            return jsonify({"images": images})
-
+            response_data = {"images": images}
+            if revised_prompts:
+                response_data["revised_prompts"] = revised_prompts
+                
+            return jsonify(response_data)
         else:
             logging.error("响应中未找到图片数据")
             return jsonify({"error": "响应中未找到图片数据"}), 500
@@ -102,6 +111,10 @@ def generate_image(secret):
     except Exception as e:
         logging.exception("发生错误: %s", e)
         return jsonify({"error": str(e)}), 500
+
+@app.route('/ping', methods=['GET'])
+def ping():
+    return jsonify({'type': 'ping'})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3000)
