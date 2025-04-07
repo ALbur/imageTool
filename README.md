@@ -63,37 +63,117 @@ import base64
 from io import BytesIO
 from PIL import Image
 
-# 定义请求的URL和数据
-url = "http://localhost:3000/your_secret_key_here/generate_image"
-headers = {"Content-Type": "application/json"}
-data = {
-    "apiKey": "your_api_key",
-    "prompt": "Generate an image of a sunset over the mountains",
-    "model": "grok-2-image-latest",
-    "baseURL": "https://api.x.ai,
-    "returnFormat": "base64"
-}
-
-# 发送POST请求
-response = requests.post(url, headers=headers, json=data)
-
-# 检查请求是否成功
-if response.status_code == 200:
-    # 解析返回的JSON数据
-    response_data = response.json()
+def fetch_and_display_image(api_key, prompt, model="grok-2-image", base_url="https://api.x.ai", response_format="b64_json", secret="", server_url="", n=1):
+    """
+    根据指定参数获取图像并显示。
     
-    # 提取base64编码的图像数据
-    base64_image = response_data['images'][0]
+    参数:
+        api_key (str): API 密钥
+        prompt (str): 提示信息
+        model (str, 可选): 使用的模型名称,默认为"grok-2-image"
+        base_url (str, 可选): API基础URL,默认为"https://api.x.ai"
+        response_format (str, 可选): 返回格式,可以是"url"或"b64_json",默认为"b64_json"
+        secret (str, 可选): 访问服务器所需的密钥
+        server_url (str, 可选): 服务器URL,不包含secret和路径
+        n (int, 可选): 生成图片的数量,范围1-10,默认为1
+        
+    返回:
+        如果成功返回图像数组,否则返回None。对于response_format="url"返回图片URL列表,对于"b64_json"返回Base64编码字符串列表。
+    """
+    # 确保server_url已提供
+    if not server_url:
+        raise ValueError("必须提供服务器URL")# 确保secret已提供
+    if not secret:
+        raise ValueError("必须提供secret")
     
-    # 将base64编码图像转换为PIL图像
-    image_data = base64.b64decode(base64_image)
-    image = Image.open(BytesIO(image_data))
+    # 构建完整的请求URL
+    url = f"{server_url}/{secret}/generate_image"
     
-    # 显示图像
-    image.show()
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "apiKey": api_key,
+        "prompt": prompt,
+        "model": model,
+        "baseURL": base_url,
+        "response_format": response_format,  # ä¿®正参数名称
+        "n": n  # 添加n参数
+    }
 
-else:
-    print(f"请求失败，状态码：{response.status_code}")
+    try:
+        # 发送POST请求
+        response = requests.post(url, headers=headers, json=data)
+        
+        # 检查请求是否成功
+        if response.status_code == 200:
+            # 解析返回的JSON数据
+            response_data = response.json()
+            
+            # 提取图像数据
+            images = response_data.get('images', [])
+            
+            # 如果返回的是URL
+            if response_format == "url":
+                # 对于URL格式,可以打印或返回URL
+                for i, image_url in enumerate(images):
+                    print(f"图片 {i+1} URL: {image_url}")
+                
+                return images
+            
+            # 如果返回的是Base64编码的图像数据
+            elif response_format == "b64_json":
+                displayed_images = []
+                for i, base64_image in enumerate(images):
+                    try:
+                        # 将base64编码图像转换为PIL图像并显示
+                        image_data = base64.b64decode(base64_image)
+                        image = Image.open(BytesIO(image_data))
+                        image.show()
+                        print(f"已显示图片 {i+1}")
+                        displayed_images.append(image)
+                    except Exception as e:
+                        print(f"显示图片 {i+1} 时出错: {e}")
+                
+                # 如果response_data中包含修订后的提示词,打印它们
+                if 'revised_prompts' in response_data:
+                    for i, revised_prompt in enumerate(response_data['revised_prompts']):
+                        print(f"修订后的提示词 {i+1}: {revised_prompt}")
+                
+                return images
+            
+            else:
+                print(f"不支持的响应格式: {response_format}")
+                return None
+                
+        else:
+            print(f"请求失败,状态码:{response.status_code}")
+            if response.text:
+                print(f"错误信息:{response.text}")
+            return None
+            
+    except Exception as e:
+        print(f"请求过程中发生错误:{e}")
+        return None
+
+# 使用示例
+if __name__ == "__main__":
+    # 这些参数需要根据实际{'type': 'ping'}情况填写
+    api_key = "your_api_key"
+    prompt = "一只可爱的小猫在阳光下玩耍"
+    server_url = "http://localhost:3000"  # 服务器URL,不包含secret和路径
+    secret = "your_secret"  # 与服务端配置的SECRET相同
+    
+    # 调用函数
+    images = fetch_and_display_image(
+        api_key=api_key,
+        prompt=prompt,
+        model="grok-2-image",
+        base_url="https://api.x.ai",
+        response_format="b64_json",
+        secret=secret,
+        server_url=server_url,
+        n=1
+    )
+
 ```
 
 ### 说明
