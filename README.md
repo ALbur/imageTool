@@ -151,7 +151,7 @@ if __name__ == "__main__":
     # 这些参数需要根据实际{'type': 'ping'}情况填写
     api_key = "your_api_key"
     prompt = "一只可爱的小猫在阳光下玩耍"
-    url = "http://localhost:3000/<secret>/generate_image"  # 服务器URL,不包含secret和路径
+    url = "http://localhost:3000/<secret>/generate_image"  # 服务器URL,包含secret和路径
     
     # 调用函数
     images = fetch_and_display_image(
