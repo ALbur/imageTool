@@ -80,12 +80,6 @@ def fetch_and_display_image(api_key, prompt, model="grok-2-image-latest", base_u
     返回:
         如果成功返回图像数组,否则返回None。对于response_format="url"返回图片URL列表,对于"b64_json"返回Base64编码字符串列表。
     """
-    # 确保server_url已提供
-    if not server_url:
-        raise ValueError("必须提供服务器URL")# 确保secret已提供
-    if not secret:
-        raise ValueError("必须提供secret")
-    
     
     headers = {"Content-Type": "application/json"}
     data = {
