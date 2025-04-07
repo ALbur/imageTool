@@ -73,9 +73,9 @@ def fetch_and_display_image(api_key, prompt, model="grok-2-image-latest", base_u
         model (str, 可选): 使用的模型名称,默认为"grok-2-image"
         base_url (str, 可选): API基础URL,默认为"https://api.x.ai"
         response_format (str, 可选): 返回格式,可以是"url"或"b64_json",默认为"b64_json"
-        secret (str, 可选): 访问服务器所需的密钥
-        server_url (str, 可选): 服务器URL,不包含secret和路径
+        url (str,必填): 服务器URL,包含secret和路径
         n (int, 可选): 生成图片的数量,范围1-10,默认为1
+        
         
     返回:
         如果成功返回图像数组,否则返回None。对于response_format="url"返回图片URL列表,对于"b64_json"返回Base64编码字符串列表。
