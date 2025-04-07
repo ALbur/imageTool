@@ -63,7 +63,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 
-def fetch_and_display_image(api_key, prompt, model="grok-2-image", base_url="https://api.x.ai", response_format="b64_json", secret="", server_url="", n=1):
+def fetch_and_display_image(api_key, prompt, model="grok-2-image-latest", base_url="https://api.x.ai", response_format="b64_json", url="", n=1):
     """
     根据指定参数获取图像并显示。
     
@@ -86,8 +86,6 @@ def fetch_and_display_image(api_key, prompt, model="grok-2-image", base_url="htt
     if not secret:
         raise ValueError("必须提供secret")
     
-    # 构建完整的请求URL
-    url = f"{server_url}/{secret}/generate_image"
     
     headers = {"Content-Type": "application/json"}
     data = {
@@ -159,8 +157,7 @@ if __name__ == "__main__":
     # 这些参数需要根据实际{'type': 'ping'}情况填写
     api_key = "your_api_key"
     prompt = "一只可爱的小猫在阳光下玩耍"
-    server_url = "http://localhost:3000"  # 服务器URL,不包含secret和路径
-    secret = "your_secret"  # 与服务端配置的SECRET相同
+    url = "http://localhost:3000/<secret>/generate_image"  # 服务器URL,不包含secret和路径
     
     # 调用函数
     images = fetch_and_display_image(
@@ -169,8 +166,7 @@ if __name__ == "__main__":
         model="grok-2-image",
         base_url="https://api.x.ai",
         response_format="b64_json",
-        secret=secret,
-        server_url=server_url,
+        url=url,
         n=1
     )
 
