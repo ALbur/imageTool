@@ -33,7 +33,10 @@ docker build -t image-generation-server .
 ```bash
 docker run -p 3000:3000 -e SECRET=your_secret_key_here -e RATE_LIMIT=10 image-generation-server
 ```
-
+dockerhub
+```bash
+docker run -p 3000:3000 -e SECRET=your_secret_key_here -e RATE_LIMIT=10 dhusr/image-generation-server:latest
+```
 - `SECRET` 是必需的环境变量，用于验证请求。
 - `RATE_LIMIT` 是可选的环境变量，默认值是每分钟5次请求。可以通过这个变量来设置不同的速率限制。
 
@@ -148,7 +151,7 @@ def fetch_and_display_image(api_key, prompt, model="grok-2-image-latest", base_u
 
 # 使用示例
 if __name__ == "__main__":
-    # 这些参数需要根据实际{'type': 'ping'}情况填写
+    # 这些参数需要根据实际情况填写
     api_key = "your_api_key"
     prompt = "一只可爱的小猫在阳光下玩耍"
     url = "http://localhost:3000/<secret>/generate_image"  # 服务器URL,包含secret和路径
